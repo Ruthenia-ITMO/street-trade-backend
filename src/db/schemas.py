@@ -25,20 +25,25 @@ class User(Base):
     is_admin = Column(Boolean, nullable=False, default=False)
 
 
-class RTSP_Stream:
+class RTSP_Stream(Base):
     __tablename__ = "RTSP_stream"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False, index=True)
     url = Column(String, nullable=False)
+    login = Column(String, nullable=True)
+    password = Column(String, nullable=True)
+
+    frames = relationship("Frame", back_populates="stream")
 
 
-class Frame:
+class Frame(Base):
     __tablename__ = "frame"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    stream_id = Column(Integer, ForeignKey("rtsp_stream.id"), nullable=False)
+    stream_id = Column(Integer, ForeignKey("RTSP_stream.id"), nullable=False)
     frame_url = Column(String, nullable=False)
     timestamp = Column(DateTime, nullable=False)
+    is_correct = Column(Boolean, nullable=True)
 
     stream = relationship("RTSP_Stream", back_populates="frames")

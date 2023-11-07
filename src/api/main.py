@@ -1,59 +1,44 @@
 import asyncio
+import os
 from asyncio import WindowsSelectorEventLoopPolicy
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import utils
 from session import get_session, engine
 from security import verify_password, sign_jwt, JWTBearer, get_hash_password
+from src.api.routers import user, rtsp, frames, neuro
 from src.db import schemas, crud
 import models
 
 app = FastAPI()
-
-async def admin_required(token: str = Depends(JWTBearer()), session: AsyncSession = Depends(get_session)):
-    user = await utils.get_user_from_jwt(session, token)
-    if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Admin required")
-
+app.include_router(user.router)
+app.include_router(rtsp.router)
+app.include_router(frames.router)
+app.include_router(neuro.router)
 
 
 @app.on_event("startup")
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(schemas.Base.metadata.create_all)
+    # ONLY FOR TESTING
+    # conn = await get_session()
+    # await crud.add_user(session=conn, name="admin", hashed_password=get_hash_password("admin"), is_admin=True)
+    # await conn.commit()
 
 
-
-@app.post("/login")
-async def login(user: models.UserLogin, session: AsyncSession = Depends(get_session)):
-    res = await crud.get_user_by_name(session, user.name)
-    if res:
-        if verify_password(user.password, res.hashed_password):
-            return sign_jwt(res.id)
-    return {
-        "error": "Wrong login details!"
-    }
-
-
-@app.post("/add_user", dependencies=[Depends(admin_required)])
-async def add_user(user: models.UserCreate, session: AsyncSession = Depends(get_session)):
-    res = await crud.get_user_by_name(session, user.name)
-    if res:
-        return {
-            "error": "User already exists!"
-        }
-    hashed_password = get_hash_password(user.password)
-    res = await crud.add_user(session, user.name, hashed_password, user.is_admin)
-    return res
 
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
+
 if __name__ == "__main__":
     import uvicorn
 
+    if os.name == 'nt':
+        asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
     uvicorn.run(app, host="0.0.0.0")

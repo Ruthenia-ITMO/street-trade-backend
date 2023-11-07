@@ -34,11 +34,12 @@ def decode_jwt(token: str) -> dict:
     return decoded_token if decoded_token["expires"] >= time.time() else None
 
 
-def sign_jwt(user_id: int) -> Dict[str, str]:
+def sign_jwt(id: int, **kwargs) -> Dict[str, str]:
     payload = {
-        "user_id": user_id,
+        "id": id,
         "expires": time.time() + ACCESS_TOKEN_EXPIRE_MINUTES * 60
     }
+    payload.update(kwargs)
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
     return token_response(token)
