@@ -57,9 +57,11 @@ async def get_service_account_by_name(session: AsyncSession, name):
     res = await session.scalars(select(Service_Account).where(Service_Account.name == name))
     return res.first()
 
+
 async def get_service_account_by_id(session: AsyncSession, id):
     res = await session.scalars(select(Service_Account).where(Service_Account.id == id))
     return res.first()
+
 
 async def add_service_account(session: AsyncSession, name):
     token = secrets.token_urlsafe(64)
@@ -71,3 +73,9 @@ async def add_service_account(session: AsyncSession, name):
         "name": name,
         "token": token
     }
+
+
+async def add_frame_url(session: AsyncSession, frame_url: str, stream_id: id):
+    frame = Frame(stream_id=stream_id, frame_url=frame_url)
+    session.add(frame)
+    await session.flush()

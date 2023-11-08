@@ -14,7 +14,7 @@ AsyncCallable = Callable[..., Awaitable]
 logger = getLogger()
 
 
-async def service_required(session: AsyncSession, token: str) -> User:
+async def service_required(token: str = Depends(JWTBearer()), session: AsyncSession = Depends(get_session)):
     data = decode_jwt(token)
     if data['type'] != 'service':
         raise HTTPException(status_code=403)

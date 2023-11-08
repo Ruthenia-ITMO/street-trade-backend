@@ -2,6 +2,7 @@ from sqlalchemy import String, ForeignKey, JSON, Column, Integer, Boolean, DateT
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.ext.orderinglist import OrderingList, ordering_list
+from datetime import datetime
 
 
 class Base(DeclarativeBase):
@@ -43,7 +44,7 @@ class Frame(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     stream_id = Column(Integer, ForeignKey("RTSP_stream.id"), nullable=False)
     frame_url = Column(String, nullable=False)
-    timestamp = Column(DateTime, nullable=False)
-    is_correct = Column(Boolean, nullable=True)
+    timestamp = Column(DateTime, default=datetime.now())
+    is_correct = Column(Boolean, default=True)
 
     stream = relationship("RTSP_Stream", back_populates="frames")
