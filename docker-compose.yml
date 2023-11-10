@@ -8,6 +8,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - "80:80"
     environment:
       S3_URL: ${S3_URL}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
