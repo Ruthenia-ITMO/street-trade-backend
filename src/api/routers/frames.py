@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.api import config
 from src.api.security import JWTBearer
-from src.api.session import get_session
+from src.api.session import get_db_session, get_s3_session
 from src.api.utils import admin_required, service_required
 from src.db import crud
+from urllib.parse import urlparse
+
+from datetime import datetime
 
 router = APIRouter(
     prefix="/frames",
@@ -13,10 +17,32 @@ router = APIRouter(
 )
 
 
-@router.get("/get/all", dependencies=[Depends(JWTBearer())])
-async def get_frames(session: AsyncSession = Depends(get_session), limit: int = Query(100, ge=0),
-                     offset: int = Query(0, ge=0)):
+@router.get("/", dependencies=[Depends(JWTBearer())])
+async def get_frames(session: AsyncSession = Depends(get_db_session), page: int = Query(1, ge=1),
+                     per_page: int = Query(100, ge=0)):
+    limit = per_page * page
+    offset = (page - 1) * per_page
     res = await crud.get_frames(session, limit, offset)
     return res
 
+
+@router.post("/validity", dependencies=[Depends(JWTBearer())])
+async def set_correct(frame_id: int, is_valid: bool, session: AsyncSession = Depends(get_db_session)):
+    await crud.set_frame_validity(session, frame_id, is_valid)
+    await session.commit()
+    return 'ok'
+
+
 @router.post("/upload", dependencies=[Depends(service_required)])
+async def upload_frames(rtsp_id: int, file: UploadFile, session: AsyncSession = Depends(get_db_session),
+                        s3=Depends(get_s3_session)):
+    bucket_name = config.S3_BUCKET
+    file_type = file.filename.split(".")[-1]
+    file_key = f"{rtsp_id}_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.{file_type}"
+    async with s3 as s3_session:
+        await s3_session.upload_fileobj(file.file, bucket_name, file_key)
+    host = urlparse(config.S3_URL)
+    url = f"{host.scheme}://{config.S3_BUCKET}.{host.netloc}/{file_key}"
+    await crud.add_frame_url(session, url, rtsp_id)
+    await session.commit()
+    return {"OK": 200, "url": url}

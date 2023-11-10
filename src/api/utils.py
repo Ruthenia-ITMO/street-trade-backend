@@ -5,16 +5,17 @@ from logging import getLogger
 from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from security import decode_jwt, JWTBearer
-from src.api.session import get_session
-from src.db.schemas import User
+from src.api.security import decode_jwt, JWTBearer
+from src.api.session import get_db_session
 from src.db.crud import get_user_by_id, get_service_account_by_id
 
 AsyncCallable = Callable[..., Awaitable]
 logger = getLogger()
 
 
-async def service_required(session: AsyncSession, token: str) -> User:
+
+
+async def service_required(token: str = Depends(JWTBearer()), session: AsyncSession = Depends(get_db_session)):
     data = decode_jwt(token)
     if data['type'] != 'service':
         raise HTTPException(status_code=403)
@@ -23,7 +24,7 @@ async def service_required(session: AsyncSession, token: str) -> User:
         raise HTTPException(status_code=403)
 
 
-async def admin_required(token: str = Depends(JWTBearer()), session: AsyncSession = Depends(get_session)):
+async def admin_required(token: str = Depends(JWTBearer()), session: AsyncSession = Depends(get_db_session)):
     data = decode_jwt(token)
     if data['type'] != 'user':
         raise HTTPException(status_code=403)
@@ -32,7 +33,7 @@ async def admin_required(token: str = Depends(JWTBearer()), session: AsyncSessio
         raise HTTPException(status_code=403, detail="Admin required")
 
 
-async def user_required(token: str = Depends(JWTBearer()), session: AsyncSession = Depends(get_session)):
+async def user_required(token: str = Depends(JWTBearer()), session: AsyncSession = Depends(get_db_session)):
     data = decode_jwt(token)
     if data['type'] != 'user':
         raise HTTPException(status_code=403)

@@ -11,9 +11,9 @@ class UserCreate(BaseModel):
     is_admin: bool = False
 
 
-class RTSP_Stream(BaseModel):
+class stream(BaseModel):
     name: str
-    url: str
+    rtsp_url: str
 
 
 class ServiceAccountLogin(BaseModel):

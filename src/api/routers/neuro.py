@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api import utils, models
 from src.api.security import verify_password, sign_jwt
-from src.api.session import get_session
+from src.api.session import get_db_session
 from src.db import crud
 
 router = APIRouter(
@@ -14,7 +14,7 @@ router = APIRouter(
 
 
 @router.post("/add", dependencies=[Depends(utils.admin_required)])
-async def add_service_account(name: str, session: AsyncSession = Depends(get_session)):
+async def add_service_account(name: str, session: AsyncSession = Depends(get_db_session)):
     res = await crud.get_service_account_by_name(session, name)
     if res:
         return {
@@ -25,7 +25,7 @@ async def add_service_account(name: str, session: AsyncSession = Depends(get_ses
     return res
 
 @router.post('/login')
-async def login(service_account: models.ServiceAccountLogin, session: AsyncSession = Depends(get_session)):
+async def login(service_account: models.ServiceAccountLogin, session: AsyncSession = Depends(get_db_session)):
     res = await crud.get_service_account_by_name(session, service_account.name)
     if verify_password(service_account.token, res.hashed_token):
         return sign_jwt(res.id, type='service')
