@@ -4,7 +4,7 @@ from sqlalchemy import select, Select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.security import get_hash_password
-from src.db.schemas import User, Frame, RTSP_Stream, Service_Account
+from src.db.schemas import User, Frame, Stream, Service_Account
 
 
 async def paginate(session: AsyncSession, query: Select, limit: int, offset: int) -> dict:
@@ -31,20 +31,20 @@ async def get_user_by_name(session: AsyncSession, name: str) -> User:
     return user.first()
 
 
-async def add_RTSP_Stream(session, name, url):
-    stream = RTSP_Stream(name=name, url=url)
+async def add_stream(session, name, rtcp_url, hls_url):
+    stream = Stream(name=name, rtsp_url=rtcp_url, hls_url=hls_url)
     session.add(stream)
     await session.flush()
     return stream
 
 
-async def get_RTSP_Stream_by_name(session, name):
-    res = await session.scalars(select(RTSP_Stream).where(RTSP_Stream.name == name))
+async def get_stream_by_name(session, name):
+    res = await session.scalars(select(Stream).where(Stream.name == name))
     return res.first()
 
 
-async def get_RTSP_Streams(session, limit, offset):
-    res = await paginate(session, select(RTSP_Stream), limit, offset)
+async def get_streams(session, limit, offset):
+    res = await paginate(session, select(Stream), limit, offset)
     return res
 
 
@@ -78,4 +78,11 @@ async def add_service_account(session: AsyncSession, name):
 async def add_frame_url(session: AsyncSession, frame_url: str, stream_id: id):
     frame = Frame(stream_id=stream_id, frame_url=frame_url)
     session.add(frame)
+    await session.flush()
+
+
+async def set_frame_validity(session, frame_id, is_valid):
+    frame = await session.scalars(select(Frame).where(Frame.id == frame_id))
+    frame = frame.first()
+    frame.is_correct = is_valid
     await session.flush()

@@ -3,19 +3,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api import models
 from src.api.security import get_hash_password, verify_password, sign_jwt
-from src.api.session import get_session
+from src.api.session import get_db_session
 from src.api.utils import admin_required
 from src.db import crud
 
 router = APIRouter(
-    prefix="/user",
-    tags=["user"],
+    prefix="/users",
+    tags=["users"],
     responses={404: {"description": "Not found"}},
 )
 
 
 @router.post("/login")
-async def login(user: models.UserLogin, session: AsyncSession = Depends(get_session)):
+async def login(user: models.UserLogin, session: AsyncSession = Depends(get_db_session)):
     res = await crud.get_user_by_name(session, user.name)
     if res:
         if verify_password(user.password, res.hashed_password):
@@ -24,7 +24,7 @@ async def login(user: models.UserLogin, session: AsyncSession = Depends(get_sess
 
 
 @router.post("/add", dependencies=[Depends(admin_required)])
-async def add_user(user: models.UserCreate, session: AsyncSession = Depends(get_session)):
+async def add_user(user: models.UserCreate, session: AsyncSession = Depends(get_db_session)):
     res = await crud.get_user_by_name(session, user.name)
     if res:
         return {

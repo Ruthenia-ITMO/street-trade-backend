@@ -6,7 +6,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from passlib.context import CryptContext
 from fastapi import Depends, Request, HTTPException
 
-import config
+from src.api import config
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
