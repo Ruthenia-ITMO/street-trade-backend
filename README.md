@@ -44,6 +44,7 @@
 
 - **Описание:** URL сервиса [RTSPToWeb](https://github.com/deepch/RTSPtoWeb).
 - **Пример:** `http://{user}:{password}@rtsptoweb.example.com`
+- **Примечание:** Если запускать в Docker, то логин и пароль `demo`
 
 ## Запуск
 `docker-compose up -d --build`
