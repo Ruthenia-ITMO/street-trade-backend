@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api import config
 from src.api.security import JWTBearer
+from src.api.models import ValidityForm
 from src.api.session import get_db_session, get_s3_session
 from src.api.utils import admin_required, service_required
 from src.db import crud
@@ -26,9 +27,15 @@ async def get_frames(session: AsyncSession = Depends(get_db_session), page: int 
     return res
 
 
+@router.get('/{id}', dependencies=[Depends(JWTBearer())])
+async def get_frame(id: int, session: AsyncSession = Depends(get_db_session)):
+    res = await crud.get_frame_by_id(session, id)
+    return res
+
+
 @router.post("/validity", dependencies=[Depends(JWTBearer())])
-async def set_correct(frame_id: int, is_valid: bool, session: AsyncSession = Depends(get_db_session)):
-    await crud.set_frame_validity(session, frame_id, is_valid)
+async def set_correct(data: ValidityForm, session: AsyncSession = Depends(get_db_session)):
+    await crud.set_frame_validity(session, data.frame_id, data.is_valid)
     await session.commit()
     return 'ok'
 

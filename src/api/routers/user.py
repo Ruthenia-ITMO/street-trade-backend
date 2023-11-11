@@ -34,4 +34,4 @@ async def add_user(user: models.UserCreate, session: AsyncSession = Depends(get_
     res = await crud.add_user(session, user.name, hashed_password, user.is_admin)
     # TODO Create middleware to commit session
     await session.commit()
-    return res.name
+    return 'ok'

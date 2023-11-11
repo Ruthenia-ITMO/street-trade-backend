@@ -4,7 +4,7 @@ import os
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.session import get_db_session, engine
+from src.api.session import get_db_session, engine, async_session
 from src.api.security import verify_password, sign_jwt, JWTBearer, get_hash_password
 from src.api import config
 from src.api.routers import user, rtsp, frames, neuro
@@ -29,11 +29,11 @@ app.add_middleware(
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(schemas.Base.metadata.create_all)
-    conn = await get_db_session()
-    if not await get_user_by_name(conn, 'admin'):
-        await crud.add_user(session=conn, name="admin", hashed_password=get_hash_password(config.ADMIN_PASSWORD),
-                            is_admin=True)
-        await conn.commit()
+    async with async_session() as conn:
+        if not await get_user_by_name(conn, 'admin'):
+            await crud.add_user(session=conn, name="admin", hashed_password=get_hash_password(config.ADMIN_PASSWORD),
+                                is_admin=True)
+            await conn.commit()
 
 
 @app.get("/")

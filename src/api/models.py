@@ -19,3 +19,11 @@ class stream(BaseModel):
 class ServiceAccountLogin(BaseModel):
     name: str
     token: str
+
+
+class ValidityForm(BaseModel):
+    frame_id: int
+    is_valid: bool
+
+class AddServiceAccount(BaseModel):
+    name: str

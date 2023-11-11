@@ -52,3 +52,8 @@ async def get_streams(session: AsyncSession = Depends(get_db_session), page: int
     offset = (page - 1) * per_page
     res = await crud.get_streams(session, limit, offset)
     return res
+
+@router.get('/{id}', dependencies=[Depends(JWTBearer())])
+async def get_stream(id: int, session: AsyncSession = Depends(get_db_session)):
+    res = await crud.get_stream_by_id(session, id)
+    return res
