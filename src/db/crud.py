@@ -2,6 +2,7 @@ import secrets
 
 from sqlalchemy import select, Select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.api.security import get_hash_password
 from src.db.schemas import User, Frame, Stream, Service_Account
@@ -49,8 +50,15 @@ async def get_streams(session, limit, offset):
 
 
 async def get_frames(session, limit, offset):
-    res = await paginate(session, select(Frame), limit, offset)
+    res = await paginate(session, select(Frame).options(selectinload(Frame.stream)), limit, offset)
+
     return res
+
+
+async def get_frame_by_id(session, frame_id):
+    res = await session.scalars(select(Frame).options(selectinload(Frame.stream)).where(
+        Frame.id == frame_id))
+    return res.first()
 
 
 async def get_service_account_by_name(session: AsyncSession, name):
@@ -86,3 +94,8 @@ async def set_frame_validity(session, frame_id, is_valid):
     frame = frame.first()
     frame.is_correct = is_valid
     await session.flush()
+
+
+async def get_stream_by_id(session, stream_id):
+    res = await session.scalars(select(Stream).where(Stream.id == stream_id))
+    return res.first()
