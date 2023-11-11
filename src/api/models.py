@@ -16,9 +16,10 @@ class stream(BaseModel):
     rtsp_url: str
 
 
-class ServiceAccountLogin(BaseModel):
+class ServiceAccountUpload(BaseModel):
     name: str
     token: str
+    rstp_id: int
 
 
 class ValidityForm(BaseModel):
@@ -27,3 +28,4 @@ class ValidityForm(BaseModel):
 
 class AddServiceAccount(BaseModel):
     name: str
+

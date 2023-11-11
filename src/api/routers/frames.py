@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, Query, UploadFile
+from fastapi import APIRouter, Depends, Query, UploadFile, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api import config
-from src.api.security import JWTBearer
-from src.api.models import ValidityForm
+from src.api.security import JWTBearer, verify_password
+from src.api.models import ValidityForm, ServiceAccountUpload
 from src.api.session import get_db_session, get_s3_session
 from src.api.utils import admin_required, service_required
 from src.db import crud
@@ -40,9 +40,13 @@ async def set_correct(data: ValidityForm, session: AsyncSession = Depends(get_db
     return 'ok'
 
 
-@router.post("/upload", dependencies=[Depends(service_required)])
-async def upload_frames(rtsp_id: int, file: UploadFile, session: AsyncSession = Depends(get_db_session),
+@router.post("/upload")
+async def upload_frames(form: ServiceAccountUpload, file: UploadFile, session: AsyncSession = Depends(get_db_session),
                         s3=Depends(get_s3_session)):
+    res = await crud.get_service_account_by_name(session, form.name)
+    if not verify_password(form.token, res.hashed_token):
+        return HTTPException(status_code=401, detail="Wrong login details!")
+    rtsp_id = form.rtsp_id
     bucket_name = config.S3_BUCKET
     file_type = file.filename.split(".")[-1]
     file_key = f"{rtsp_id}_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}.{file_type}"

@@ -45,7 +45,7 @@ async def add_stream(camera: models.stream, session: AsyncSession = Depends(get_
     return res
 
 
-@router.get("/", dependencies=[Depends(JWTBearer())])
+@router.get("/")
 async def get_streams(session: AsyncSession = Depends(get_db_session), page: int = Query(1, ge=1),
                       per_page: int = Query(100, ge=0)):
     limit = per_page * page

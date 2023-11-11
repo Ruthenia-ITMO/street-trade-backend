@@ -25,9 +25,9 @@ async def add_service_account(form: AddServiceAccount, session: AsyncSession = D
     await session.commit()
     return res
 
-@router.post('/login')
-async def login(service_account: models.ServiceAccountLogin, session: AsyncSession = Depends(get_db_session)):
-    res = await crud.get_service_account_by_name(session, service_account.name)
-    if verify_password(service_account.token, res.hashed_token):
-        return sign_jwt(res.id, type='service')
-    raise HTTPException(status_code=401, detail="Wrong login details!")
+# @router.post('/login')
+# async def login(service_account: models.ServiceAccountLogin, session: AsyncSession = Depends(get_db_session)):
+#     res = await crud.get_service_account_by_name(session, service_account.name)
+#     if verify_password(service_account.token, res.hashed_token):
+#         return sign_jwt(res.id, type='service')
+#     raise HTTPException(status_code=401, detail="Wrong login details!")
