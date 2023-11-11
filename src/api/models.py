@@ -19,7 +19,7 @@ class stream(BaseModel):
 class ServiceAccountUpload(BaseModel):
     name: str
     token: str
-    rstp_id: int
+    rtsp_id: int
 
 
 class ValidityForm(BaseModel):
